@@ -1,0 +1,4 @@
+# Default to release profile for examples
+[alias]
+run-example = "run --package settings-example"
+test-all = "test --workspace"
