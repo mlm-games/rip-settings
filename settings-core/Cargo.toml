@@ -14,7 +14,10 @@ tokio = { workspace = true }
 thiserror = { workspace = true }
 chrono = { workspace = true }
 regex = { workspace = true }
-md5 = { workspace = true }
+sha2 = { workspace = true }
+hex = { workspace = true }
+argon2 = { workspace = true }
+rand_core = { workspace = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

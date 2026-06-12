@@ -1,5 +1,3 @@
-//! Undo/redo support for setting changes.
-
 use crate::error::SettingsError;
 use crate::repository::SettingsRepository;
 use crate::schema::SettingsSchema;
@@ -17,6 +15,9 @@ pub struct SettingChange {
 }
 
 /// Manages undo/redo history for setting changes.
+///
+/// Wraps a [`SettingsRepository`] and automatically records changes
+/// when using [`UndoManager::set_field`] instead of [`SettingsRepository::set_field`].
 pub struct UndoManager<T: SettingsSchema + PartialEq> {
     repository: std::sync::Arc<SettingsRepository<T>>,
     undo_stack: RwLock<VecDeque<SettingChange>>,
@@ -34,8 +35,26 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
         }
     }
 
-    /// Record a change for undo support.
+    /// Set a field and automatically record the change for undo.
+    pub fn set_field(&self, name: &str, value: serde_json::Value) -> Result<(), SettingsError> {
+        let old_val = self.repository.get_field(name)?;
+        self.repository.set_field(name, value.clone())?;
+        self.record_change_inner(name, old_val, value);
+        Ok(())
+    }
+
+    /// Record a change for undo support (separate call required when using
+    /// [`SettingsRepository::set_field`] directly).
     pub fn record_change(
+        &self,
+        field_name: impl Into<String>,
+        old_value: serde_json::Value,
+        new_value: serde_json::Value,
+    ) {
+        self.record_change_inner(field_name, old_value, new_value);
+    }
+
+    fn record_change_inner(
         &self,
         field_name: impl Into<String>,
         old_value: serde_json::Value,
@@ -48,20 +67,19 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
             timestamp: Utc::now().timestamp_millis(),
         };
 
-        let mut undo = self.undo_stack.write().unwrap();
+        let mut undo = self.undo_stack.write().unwrap_or_else(|e| e.into_inner());
         undo.push_back(change);
         while undo.len() > self.max_history {
             undo.pop_front();
         }
 
-        // Clear redo stack on new change
-        self.redo_stack.write().unwrap().clear();
+        self.redo_stack.write().unwrap_or_else(|e| e.into_inner()).clear();
     }
 
     /// Undo the last change.
     pub fn undo(&self) -> Result<bool, SettingsError> {
         let change = {
-            let mut undo = self.undo_stack.write().unwrap();
+            let mut undo = self.undo_stack.write().unwrap_or_else(|e| e.into_inner());
             undo.pop_back()
         };
 
@@ -72,14 +90,17 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
         self.repository
             .set_field(&change.field_name, change.old_value.clone())?;
 
-        self.redo_stack.write().unwrap().push_back(change);
+        self.redo_stack
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_back(change);
         Ok(true)
     }
 
     /// Redo the last undone change.
     pub fn redo(&self) -> Result<bool, SettingsError> {
         let change = {
-            let mut redo = self.redo_stack.write().unwrap();
+            let mut redo = self.redo_stack.write().unwrap_or_else(|e| e.into_inner());
             redo.pop_back()
         };
 
@@ -90,22 +111,27 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
         self.repository
             .set_field(&change.field_name, change.new_value.clone())?;
 
-        self.undo_stack.write().unwrap().push_back(change);
+        self.undo_stack
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .push_back(change);
         Ok(true)
     }
 
+    #[must_use]
     pub fn can_undo(&self) -> bool {
-        !self.undo_stack.read().unwrap().is_empty()
+        !self.undo_stack.read().unwrap_or_else(|e| e.into_inner()).is_empty()
     }
 
+    #[must_use]
     pub fn can_redo(&self) -> bool {
-        !self.redo_stack.read().unwrap().is_empty()
+        !self.redo_stack.read().unwrap_or_else(|e| e.into_inner()).is_empty()
     }
 
     pub fn undo_description(&self) -> Option<String> {
         self.undo_stack
             .read()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .back()
             .map(|c| format!("Undo: {}", c.field_name))
     }
@@ -113,14 +139,20 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
     pub fn redo_description(&self) -> Option<String> {
         self.redo_stack
             .read()
-            .unwrap()
+            .unwrap_or_else(|e| e.into_inner())
             .back()
             .map(|c| format!("Redo: {}", c.field_name))
     }
 
     /// Clear all undo/redo history.
     pub fn clear_history(&self) {
-        self.undo_stack.write().unwrap().clear();
-        self.redo_stack.write().unwrap().clear();
+        self.undo_stack
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
+        self.redo_stack
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
     }
 }

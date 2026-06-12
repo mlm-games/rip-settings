@@ -188,6 +188,7 @@ fn main() {
         s.font_size = 20.0;
         s.theme = Theme::Dark;
         s.username = "Alice".into();
+        s.notifications_enabled = true;
     })
     .unwrap();
 
@@ -296,10 +297,7 @@ fn main() {
     )));
     let undo_mgr = UndoManager::new(repo.clone(), 20);
 
-    let old_val = repo.get_field("font_size").unwrap();
-    repo.set_field("font_size", serde_json::json!(30.0))
-        .unwrap();
-    undo_mgr.record_change("font_size", old_val, serde_json::json!(30.0));
+    undo_mgr.set_field("font_size", serde_json::json!(30.0)).unwrap();
 
     println!("Undo/Redo:");
     println!("  font_size after change: {}", repo.get().font_size);

@@ -9,6 +9,10 @@ use std::path::PathBuf;
 /// - **Linux**: `$XDG_DATA_HOME/<app_name>/settings.json` or `~/.local/share/<app_name>/settings.json`
 /// - **iOS**: `<HOME>/Documents/<app_name>/settings.json`
 /// - **Android**: `/data/data/<app_name>/files/settings.json`
+///
+/// **Android note:** This uses the hard-coded path `/data/data/<app_name>/files/`.
+/// In a real Android application, obtain the data directory from the Android context
+/// at runtime (e.g. via JNI) using `context.getFilesDir()` instead.
 pub fn default_settings_path(app_name: &str) -> PathBuf {
     platform_settings_path(app_name)
 }

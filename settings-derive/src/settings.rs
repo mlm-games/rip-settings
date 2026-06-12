@@ -450,7 +450,10 @@ fn build_validation(validate: &ValidateAttrs) -> TokenStream {
     };
 
     let required = validate.required;
-    let error_msg = validate.error_message.as_deref().unwrap_or("").to_string();
+    let error_msg_tokens = match &validate.error_message {
+        Some(msg) => quote! { Some(#msg.to_string()) },
+        None => quote! { None },
+    };
 
     quote! {
         Some(multiplatform_settings_core::field::ValidationRules {
@@ -458,7 +461,7 @@ fn build_validation(validate: &ValidateAttrs) -> TokenStream {
             length: #length_tokens,
             pattern: #pattern_tokens,
             required: #required,
-            error_message: #error_msg.to_string(),
+            error_message: #error_msg_tokens,
         })
     }
 }

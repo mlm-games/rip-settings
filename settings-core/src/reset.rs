@@ -1,5 +1,3 @@
-//! Reset management — per-field, per-category, or full reset.
-
 use crate::error::SettingsError;
 use crate::repository::SettingsRepository;
 use crate::schema::SettingsSchema;
@@ -26,17 +24,17 @@ impl<'a, T: SettingsSchema + PartialEq> ResetManager<'a, T> {
         self.repository.reset_field(name)
     }
 
-    /// Reset multiple fields to their defaults.
+    /// Reset multiple fields to their defaults atomically (single persist).
     pub fn reset_fields(&self, names: &[&str]) -> Result<usize, SettingsError> {
         let defaults = T::default();
-        let mut count = 0;
-
-        for &name in names {
-            let default_value = defaults.get_field_value(name)?;
-            self.repository.set_field(name, default_value)?;
-            count += 1;
-        }
-
+        let count = names.len();
+        self.repository.update(|s| {
+            for &name in names {
+                if let Ok(val) = defaults.get_field_value(name) {
+                    let _ = s.set_field_value(name, val);
+                }
+            }
+        })?;
         Ok(count)
     }
 

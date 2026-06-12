@@ -1,33 +1,29 @@
-//! Central repository for reading/writing settings with change notification.
-
 use crate::backend::SettingsBackend;
 use crate::error::SettingsError;
 use crate::schema::SettingsSchema;
 use crate::validation;
-use std::sync::{Arc, RwLock};
+use crate::validation::ValidationResult;
+use std::sync::{Arc, Mutex, RwLock};
 use tokio::sync::watch;
 
-/// Callback type for setting change listeners.
 pub type ChangeListener<T> = Box<dyn Fn(&str, &T, &T) + Send + Sync>;
 
 /// Repository for reading/writing settings via a pluggable backend.
 pub struct SettingsRepository<T: SettingsSchema> {
     backend: Box<dyn SettingsBackend>,
-    current: Arc<RwLock<T>>,
+    current: Mutex<T>,
     sender: watch::Sender<T>,
     receiver: watch::Receiver<T>,
     change_listeners: Arc<RwLock<Vec<ChangeListener<T>>>>,
 }
 
 impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
-    /// Create a new repository, loading from the backend or using defaults.
     pub fn new(backend: Box<dyn SettingsBackend>) -> Self {
         let initial = Self::load_from_backend(&*backend);
         let (sender, receiver) = watch::channel(initial.clone());
-
         Self {
             backend,
-            current: Arc::new(RwLock::new(initial)),
+            current: Mutex::new(initial),
             sender,
             receiver,
             change_listeners: Arc::new(RwLock::new(Vec::new())),
@@ -36,29 +32,46 @@ impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
 
     /// Get the current settings value.
     pub fn get(&self) -> T {
-        self.current.read().unwrap().clone()
+        self.current
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .clone()
     }
 
     /// Update settings with a mutation function.
+    /// Validates all fields after mutation — if validation fails, the mutation is not persisted.
     pub fn update(&self, f: impl FnOnce(&mut T)) -> Result<(), SettingsError> {
-        let old = self.get();
-        let mut new = old.clone();
-        f(&mut new);
+        let mut guard = self
+            .current
+            .lock()
+            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
+        let old = guard.clone();
+        let mut candidate = old.clone();
+        f(&mut candidate);
 
-        if old == new {
+        if old == candidate {
             return Ok(());
         }
 
-        self.persist(&new)?;
+        // Validate all fields after mutation
+        for field in candidate.fields() {
+            if let Some(ref rules) = field.validation {
+                if let Ok(val) = candidate.get_field_value(field.name) {
+                    if let ValidationResult::Invalid(msg) = validation::validate_value(&val, rules) {
+                        return Err(SettingsError::ValidationFailed(msg));
+                    }
+                }
+            }
+        }
 
-        *self.current.write().unwrap() = new.clone();
-        let _ = self.sender.send(new.clone());
+        *guard = candidate;
+        self.persist(&guard)?;
+        let _ = self.sender.send(guard.clone());
 
-        // Notify listeners — find which fields changed
-        let fields = new.fields();
+        let fields = guard.fields();
         for field in &fields {
-            if old.get_field_value(field.name).ok() != new.get_field_value(field.name).ok() {
-                self.notify_change(field.name, &old, &new);
+            if old.get_field_value(field.name).ok() != guard.get_field_value(field.name).ok() {
+                self.notify_change(field.name, &old, &guard);
             }
         }
 
@@ -67,30 +80,30 @@ impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
 
     /// Set a single field by name from a JSON value.
     pub fn set_field(&self, name: &str, value: serde_json::Value) -> Result<(), SettingsError> {
-        let mut current = self.get();
+        let mut guard = self
+            .current
+            .lock()
+            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
 
-        // Validate before setting
-        if let Some(field_meta) = current.field_by_name(name) {
+        if let Some(field_meta) = guard.field_by_name(name) {
             if let Some(ref rules) = field_meta.validation {
                 let result = validation::validate_value(&value, rules);
-                if let crate::validation::ValidationResult::Invalid(msg) = result {
+                if let ValidationResult::Invalid(msg) = result {
                     return Err(SettingsError::ValidationFailed(msg));
                 }
             }
         }
 
-        let old = current.clone();
-        current.set_field_value(name, value)?;
+        let old = guard.clone();
+        guard.set_field_value(name, value)?;
 
-        if old == current {
+        if old == *guard {
             return Ok(());
         }
 
-        self.persist(&current)?;
-
-        *self.current.write().unwrap() = current.clone();
-        let _ = self.sender.send(current.clone());
-        self.notify_change(name, &old, &current);
+        self.persist(&guard)?;
+        let _ = self.sender.send(guard.clone());
+        self.notify_change(name, &old, &guard);
 
         Ok(())
     }
@@ -107,13 +120,20 @@ impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
 
     /// Add a change listener.
     pub fn add_change_listener(&self, listener: ChangeListener<T>) {
-        self.change_listeners.write().unwrap().push(listener);
+        self.change_listeners
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .push(listener);
     }
 
     /// Reload settings from the backend.
     pub fn reload(&self) -> Result<(), SettingsError> {
         let loaded = Self::load_from_backend(&*self.backend);
-        *self.current.write().unwrap() = loaded.clone();
+        let mut guard = self
+            .current
+            .lock()
+            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
+        *guard = loaded.clone();
         let _ = self.sender.send(loaded);
         Ok(())
     }
@@ -121,9 +141,13 @@ impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
     /// Reset all settings to defaults and persist.
     pub fn reset_all(&self) -> Result<(), SettingsError> {
         let defaults = T::default();
-        self.persist(&defaults)?;
-        *self.current.write().unwrap() = defaults.clone();
-        let _ = self.sender.send(defaults);
+        let mut guard = self
+            .current
+            .lock()
+            .map_err(|e| SettingsError::LockPoisoned(e.to_string()))?;
+        *guard = defaults;
+        self.persist(&guard)?;
+        let _ = self.sender.send(guard.clone());
         Ok(())
     }
 

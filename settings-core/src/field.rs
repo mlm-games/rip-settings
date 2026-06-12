@@ -11,12 +11,6 @@ pub enum FieldKind {
     Custom { type_name: String },
 }
 
-impl Default for FieldKind {
-    fn default() -> Self {
-        Self::Toggle
-    }
-}
-
 /// Validation rules for a field.
 #[derive(Clone, Debug, Default)]
 pub struct ValidationRules {
@@ -24,7 +18,7 @@ pub struct ValidationRules {
     pub length: Option<(usize, usize)>,
     pub pattern: Option<String>,
     pub required: bool,
-    pub error_message: String,
+    pub error_message: Option<String>,
 }
 
 /// Confirmation dialog configuration.

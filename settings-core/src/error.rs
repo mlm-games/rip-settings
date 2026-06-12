@@ -37,4 +37,7 @@ pub enum SettingsError {
 
     #[error("Backend error: {0}")]
     Backend(String),
+
+    #[error("Lock poisoned: {0}")]
+    LockPoisoned(String),
 }

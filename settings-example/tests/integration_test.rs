@@ -276,6 +276,7 @@ fn test_repository_basic() {
     repo.update(|s| {
         s.enabled = true;
         s.volume = 50.0;
+        s.name = "test".into();
     })
     .unwrap();
 
@@ -421,9 +422,7 @@ fn test_undo_redo() {
     )));
     let undo = UndoManager::new(repo.clone(), 10);
 
-    let old = repo.get_field("volume").unwrap();
-    repo.set_field("volume", serde_json::json!(50.0)).unwrap();
-    undo.record_change("volume", old, serde_json::json!(50.0));
+    undo.set_field("volume", serde_json::json!(50.0)).unwrap();
 
     assert!(undo.can_undo());
     assert!(!undo.can_redo());
@@ -456,7 +455,7 @@ fn test_change_listener() {
     let change_count = Arc::new(AtomicUsize::new(0));
     let count_clone = change_count.clone();
 
-    repo.add_change_listener(Box::new(move |field_name, _old, _new| {
+    repo.add_change_listener(Box::new(move |_field_name, _old, _new| {
         count_clone.fetch_add(1, Ordering::SeqCst);
     }));
 
