@@ -25,8 +25,8 @@ Type-safe settings management for Rust with declarative schema generation.
 
 ```toml
 [dependencies]
-rip-settings = "0.1"
-rip-settings-derive = "0.1"
+rip-settings = "0.1.1"
+rip-settings-derive = "0.1.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["sync", "rt"] }

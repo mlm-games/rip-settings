@@ -22,27 +22,22 @@ pub struct DefaultPinHasher;
 
 impl PinHasher for DefaultPinHasher {
     fn hash(&self, pin: &str) -> String {
-        use argon2::password_hash::SaltString;
-        use argon2::password_hash::rand_core::OsRng;
         use argon2::{Argon2, PasswordHasher};
 
-        let salt = SaltString::generate(&mut OsRng);
         Argon2::default()
-            .hash_password(pin.as_bytes(), &salt)
+            .hash_password(pin.as_bytes())
             .expect("Argon2 hashing failed")
             .to_string()
     }
 
     fn verify(&self, pin: &str, hash: &str) -> bool {
-        use argon2::password_hash::PasswordHash;
+        use argon2::password_hash::phc::PasswordHash;
         use argon2::{Argon2, PasswordVerifier};
 
         let Ok(parsed) = PasswordHash::new(hash) else {
             return false;
         };
-        Argon2::default()
-            .verify_password(pin.as_bytes(), &parsed)
-            .is_ok()
+        Argon2::default().verify_password(pin.as_bytes(), &parsed).is_ok()
     }
 }
 
