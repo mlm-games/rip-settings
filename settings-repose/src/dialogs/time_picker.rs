@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
-use std::rc::Rc;
 use repose_core::*;
 use repose_material::material3 as m3;
 use repose_ui::overlay::OverlayHandle;
 use repose_ui::{Box, Column, ViewExt};
+use std::rc::Rc;
 
 fn format_minutes(total: i32) -> String {
     let clamped = total.clamp(0, 1439);
@@ -33,7 +33,10 @@ pub fn TimePickerSettingDialog(
             let pending = pending.clone();
             let on_time_selected = on_time_selected.clone();
             let state = state.clone();
-            Rc::new(move || { on_time_selected(*pending.get()); state.dismiss(); })
+            Rc::new(move || {
+                on_time_selected(*pending.get());
+                state.dismiss();
+            })
         },
         m3::TimePickerConfig::default(),
     );
@@ -44,12 +47,17 @@ pub fn TimePickerSettingDialog(
         let pending = pending.clone();
         let state = state.clone();
         let on_time_selected = on_time_selected.clone();
-        move || { on_time_selected(*pending.get()); state.dismiss(); }
-    })).child(repose_ui::Text("OK"));
+        move || {
+            on_time_selected(*pending.get());
+            state.dismiss();
+        }
+    }))
+    .child(repose_ui::Text("OK"));
     let dismiss = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         move || state.dismiss()
-    })).child(repose_ui::Text("Cancel"));
+    }))
+    .child(repose_ui::Text("Cancel"));
     m3::AlertDialog(
         state,
         overlay,

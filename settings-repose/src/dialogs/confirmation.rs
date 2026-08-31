@@ -18,13 +18,21 @@ pub fn SettingConfirmationDialog(
     let confirm = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         let on_confirm = on_confirm.clone();
-        move || { on_confirm(); state.dismiss(); }
-    })).child(repose_ui::Text("Confirm"));
+        move || {
+            on_confirm();
+            state.dismiss();
+        }
+    }))
+    .child(repose_ui::Text("Confirm"));
     let dismiss = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         let on_dismiss = on_dismiss.clone();
-        move || { on_dismiss(); state.dismiss(); }
-    })).child(repose_ui::Text("Cancel"));
+        move || {
+            on_dismiss();
+            state.dismiss();
+        }
+    }))
+    .child(repose_ui::Text("Cancel"));
     m3::AlertDialog(
         state,
         overlay,

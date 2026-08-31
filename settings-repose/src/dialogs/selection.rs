@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
-use std::rc::Rc;
 use repose_core::*;
 use repose_material::material3 as m3;
 use repose_ui::overlay::OverlayHandle;
 use repose_ui::{Box, Column, ViewExt};
+use std::rc::Rc;
 
 /// Selection dialog - mirrors KMP's `SelectionDialog`.
 pub fn SelectionDialog(
@@ -14,26 +14,40 @@ pub fn SelectionDialog(
     selected: Option<usize>,
     on_select: Rc<dyn Fn(usize)>,
 ) -> View {
-    let items = options.iter().enumerate().map(|(idx, opt)| {
-        let label = opt.clone();
-        let is_sel = Some(idx) == selected;
-        Box(Modifier::new().fill_max_width().padding(8.0).clickable().on_click({
-            let state = state.clone();
-            let on_select = on_select.clone();
-            move || { on_select(idx); state.dismiss(); }
-        }))
-        .child(Column(Modifier::new()).child((
-            repose_ui::Text(if is_sel { "* " } else { "o " }),
-            repose_ui::Text(label),
-        )))
-    }).collect::<Vec<View>>();
+    let items = options
+        .iter()
+        .enumerate()
+        .map(|(idx, opt)| {
+            let label = opt.clone();
+            let is_sel = Some(idx) == selected;
+            Box(Modifier::new()
+                .fill_max_width()
+                .padding(8.0)
+                .clickable()
+                .on_click({
+                    let state = state.clone();
+                    let on_select = on_select.clone();
+                    move || {
+                        on_select(idx);
+                        state.dismiss();
+                    }
+                }))
+            .child(Column(Modifier::new()).child((
+                repose_ui::Text(if is_sel { "* " } else { "o " }),
+                repose_ui::Text(label),
+            )))
+        })
+        .collect::<Vec<View>>();
     let mut col = Column(Modifier::new());
-    for v in items { col = col.child(v); }
+    for v in items {
+        col = col.child(v);
+    }
     let content = col;
     let dismiss = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         move || state.dismiss()
-    })).child(repose_ui::Text("Close"));
+    }))
+    .child(repose_ui::Text("Close"));
     m3::AlertDialog(
         state,
         overlay,

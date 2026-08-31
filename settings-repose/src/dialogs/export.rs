@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
-use std::rc::Rc;
 use repose_core::*;
 use repose_material::material3 as m3;
 use repose_ui::overlay::OverlayHandle;
 use repose_ui::{Box, Column, ViewExt};
 use rip_settings::backup::{BackupValidationResult, SettingsBackupManager};
 use rip_settings::schema::SettingsSchema;
+use std::rc::Rc;
 
 /// Export settings dialog - mirrors KMP ExportSettingsDialog.
 pub fn ExportSettingsDialog<T: SettingsSchema>(
@@ -15,7 +15,9 @@ pub fn ExportSettingsDialog<T: SettingsSchema>(
     settings: T,
     on_export: Rc<dyn Fn(String)>,
 ) -> View {
-    let exported = backup_manager.export(&settings).unwrap_or_else(|e| format!("export failed: {e}"));
+    let exported = backup_manager
+        .export(&settings)
+        .unwrap_or_else(|e| format!("export failed: {e}"));
     let size = exported.len();
     let content = Column(Modifier::new())
         .child(repose_ui::Text("Settings exported successfully!"))
@@ -24,12 +26,17 @@ pub fn ExportSettingsDialog<T: SettingsSchema>(
         let state = state.clone();
         let on_export = on_export.clone();
         let exported = exported.clone();
-        move || { on_export(exported.clone()); state.dismiss(); }
-    })).child(repose_ui::Text("Share"));
+        move || {
+            on_export(exported.clone());
+            state.dismiss();
+        }
+    }))
+    .child(repose_ui::Text("Share"));
     let dismiss = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         move || state.dismiss()
-    })).child(repose_ui::Text("Cancel"));
+    }))
+    .child(repose_ui::Text("Cancel"));
     m3::AlertDialog(
         state,
         overlay,
@@ -66,20 +73,33 @@ pub fn ImportSettingsDialog(
             let state = state.clone();
             let on_import_complete = on_import_complete.clone();
             let validation = validation.clone();
-            move || { on_import_complete(validation.clone()); state.dismiss(); }
-        })).child(repose_ui::Text("Import")).into()
+            move || {
+                on_import_complete(validation.clone());
+                state.dismiss();
+            }
+        }))
+        .child(repose_ui::Text("Import"))
+        .into()
     } else {
         Box(Modifier::new().clickable().on_click({
             let state = state.clone();
             move || state.dismiss()
-        })).child(repose_ui::Text("Done")).into()
+        }))
+        .child(repose_ui::Text("Done"))
+        .into()
     };
     let dismiss: Option<View> = if can_import {
-        Some(Box(Modifier::new().clickable().on_click({
-            let state = state.clone();
-            move || state.dismiss()
-        })).child(repose_ui::Text("Cancel")).into())
-    } else { None };
+        Some(
+            Box(Modifier::new().clickable().on_click({
+                let state = state.clone();
+                move || state.dismiss()
+            }))
+            .child(repose_ui::Text("Cancel"))
+            .into(),
+        )
+    } else {
+        None
+    };
     m3::AlertDialog(
         state,
         overlay,

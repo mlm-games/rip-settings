@@ -13,7 +13,14 @@ pub fn LockDialog(
     lock_manager: Rc<SettingsLockManager>,
     on_unlocked: Rc<dyn Fn()>,
 ) -> View {
-    SettingsLockDialog(state, overlay, lock_manager, false, on_unlocked, Rc::new(|| {}))
+    SettingsLockDialog(
+        state,
+        overlay,
+        lock_manager,
+        false,
+        on_unlocked,
+        Rc::new(|| {}),
+    )
 }
 
 /// Full lock dialog - port of KMP SettingsLockDialog.
@@ -145,7 +152,11 @@ pub fn SettingsLockDialog(
     m3::AlertDialog(
         state,
         overlay,
-        View::from(repose_ui::Text(if is_setting_pin { "Set PIN" } else { "Enter PIN" })),
+        View::from(repose_ui::Text(if is_setting_pin {
+            "Set PIN"
+        } else {
+            "Enter PIN"
+        })),
         content_col.into(),
         confirm.into(),
         Some(dismiss.into()),

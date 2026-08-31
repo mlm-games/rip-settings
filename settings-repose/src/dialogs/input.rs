@@ -31,12 +31,17 @@ pub fn InputDialog(
         let text = text.clone();
         let state = state.clone();
         let on_confirm = on_confirm.clone();
-        move || { on_confirm(text.get().to_string()); state.dismiss(); }
-    })).child(repose_ui::Text("OK"));
+        move || {
+            on_confirm(text.get().to_string());
+            state.dismiss();
+        }
+    }))
+    .child(repose_ui::Text("OK"));
     let dismiss = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         move || state.dismiss()
-    })).child(repose_ui::Text("Cancel"));
+    }))
+    .child(repose_ui::Text("Cancel"));
     m3::AlertDialog(
         state,
         overlay,

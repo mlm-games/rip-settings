@@ -37,7 +37,9 @@ impl PinHasher for DefaultPinHasher {
         let Ok(parsed) = PasswordHash::new(hash) else {
             return false;
         };
-        Argon2::default().verify_password(pin.as_bytes(), &parsed).is_ok()
+        Argon2::default()
+            .verify_password(pin.as_bytes(), &parsed)
+            .is_ok()
     }
 }
 

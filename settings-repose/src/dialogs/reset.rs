@@ -30,21 +30,38 @@ pub fn ResetDialog(
         let is_sel = *selected.get() == opt;
         let opt_c = opt.clone();
         let marker = if is_sel { "* " } else { "o " };
-        col = col.child(Box(Modifier::new().fill_max_width().padding(4.0).clickable().on_click({
-            let selected = selected.clone();
-            move || selected.set(opt_c.clone())
-        })).child(repose_ui::Text(format!("{marker}{title}"))));
+        col = col.child(
+            Box(Modifier::new()
+                .fill_max_width()
+                .padding(4.0)
+                .clickable()
+                .on_click({
+                    let selected = selected.clone();
+                    move || selected.set(opt_c.clone())
+                }))
+            .child(repose_ui::Text(format!("{marker}{title}"))),
+        );
     }
     for cat in categories {
         let cat_c = cat.clone();
         let is_sel = *sel_cat.get() == cat;
         let marker = if is_sel { "* " } else { "o " };
-        col = col.child(Box(Modifier::new().fill_max_width().padding(4.0).clickable().on_click({
-            let sel_cat = sel_cat.clone();
-            let cat_c = cat_c.clone();
-            let selected = selected.clone();
-            move || { sel_cat.set(cat_c.clone()); selected.set(ResetOption::Category(cat_c.clone())); }
-        })).child(repose_ui::Text(format!("{marker}{cat_c}"))));
+        col = col.child(
+            Box(Modifier::new()
+                .fill_max_width()
+                .padding(4.0)
+                .clickable()
+                .on_click({
+                    let sel_cat = sel_cat.clone();
+                    let cat_c = cat_c.clone();
+                    let selected = selected.clone();
+                    move || {
+                        sel_cat.set(cat_c.clone());
+                        selected.set(ResetOption::Category(cat_c.clone()));
+                    }
+                }))
+            .child(repose_ui::Text(format!("{marker}{cat_c}"))),
+        );
     }
     let content = col;
     let confirm = Box(Modifier::new().clickable().on_click({
@@ -61,11 +78,13 @@ pub fn ResetDialog(
             on_reset(opt);
             state.dismiss();
         }
-    })).child(repose_ui::Text("Reset"));
+    }))
+    .child(repose_ui::Text("Reset"));
     let dismiss = Box(Modifier::new().clickable().on_click({
         let state = state.clone();
         move || state.dismiss()
-    })).child(repose_ui::Text("Cancel"));
+    }))
+    .child(repose_ui::Text("Cancel"));
     m3::AlertDialog(
         state,
         overlay,
