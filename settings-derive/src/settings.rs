@@ -88,14 +88,14 @@ pub fn expand_settings(input: DeriveInput) -> Result<TokenStream> {
         get_arms.push(quote! {
             #field_name_str => {
                 serde_json::to_value(&self.#field_name)
-                    .map_err(|e| multiplatform_settings_core::error::SettingsError::Serialization(e))
+                    .map_err(|e| rip_settings::error::SettingsError::Serialization(e))
             }
         });
 
         set_arms.push(quote! {
             #field_name_str => {
                 self.#field_name = serde_json::from_value(value)
-                    .map_err(|e| multiplatform_settings_core::error::SettingsError::Serialization(e))?;
+                    .map_err(|e| rip_settings::error::SettingsError::Serialization(e))?;
                 Ok(())
             }
         });
@@ -130,7 +130,7 @@ pub fn expand_settings(input: DeriveInput) -> Result<TokenStream> {
         let key_str = &key_name;
 
         field_meta_entries.push(quote! {
-            multiplatform_settings_core::field::FieldMeta {
+            rip_settings::field::FieldMeta {
                 name: #field_name_str,
                 key: #key_str,
                 title: #title,
@@ -150,7 +150,7 @@ pub fn expand_settings(input: DeriveInput) -> Result<TokenStream> {
     }
 
     Ok(quote! {
-        impl multiplatform_settings_core::schema::SettingsSchema for #name {
+        impl rip_settings::schema::SettingsSchema for #name {
             fn schema_version(&self) -> u32 {
                 #version
             }
@@ -159,23 +159,23 @@ pub fn expand_settings(input: DeriveInput) -> Result<TokenStream> {
                 #app_id
             }
 
-            fn fields(&self) -> Vec<multiplatform_settings_core::field::FieldMeta> {
+            fn fields(&self) -> Vec<rip_settings::field::FieldMeta> {
                 vec![
                     #(#field_meta_entries),*
                 ]
             }
 
-            fn get_field_value(&self, name: &str) -> Result<serde_json::Value, multiplatform_settings_core::error::SettingsError> {
+            fn get_field_value(&self, name: &str) -> Result<serde_json::Value, rip_settings::error::SettingsError> {
                 match name {
                     #(#get_arms)*
-                    _ => Err(multiplatform_settings_core::error::SettingsError::UnknownField(name.to_string())),
+                    _ => Err(rip_settings::error::SettingsError::UnknownField(name.to_string())),
                 }
             }
 
-            fn set_field_value(&mut self, name: &str, value: serde_json::Value) -> Result<(), multiplatform_settings_core::error::SettingsError> {
+            fn set_field_value(&mut self, name: &str, value: serde_json::Value) -> Result<(), rip_settings::error::SettingsError> {
                 match name {
                     #(#set_arms)*
-                    _ => Err(multiplatform_settings_core::error::SettingsError::UnknownField(name.to_string())),
+                    _ => Err(rip_settings::error::SettingsError::UnknownField(name.to_string())),
                 }
             }
         }
@@ -373,13 +373,13 @@ fn parse_validate_attrs(field: &syn::Field) -> Result<ValidateAttrs> {
 
 fn build_field_kind(attrs: &FieldAttrs) -> TokenStream {
     match attrs.kind.as_str() {
-        "toggle" | "" => quote! { multiplatform_settings_core::field::FieldKind::Toggle },
+        "toggle" | "" => quote! { rip_settings::field::FieldKind::Toggle },
         "slider" => {
             let min = attrs.min.unwrap_or(0.0);
             let max = attrs.max.unwrap_or(100.0);
             let step = attrs.step.unwrap_or(1.0);
             quote! {
-                multiplatform_settings_core::field::FieldKind::Slider {
+                rip_settings::field::FieldKind::Slider {
                     min: #min,
                     max: #max,
                     step: #step,
@@ -389,18 +389,18 @@ fn build_field_kind(attrs: &FieldAttrs) -> TokenStream {
         "dropdown" => {
             let opts = &attrs.options;
             quote! {
-                multiplatform_settings_core::field::FieldKind::Dropdown {
+                rip_settings::field::FieldKind::Dropdown {
                     options: vec![#(#opts.to_string()),*],
                 }
             }
         }
         "text" | "text_input" => {
-            quote! { multiplatform_settings_core::field::FieldKind::TextInput }
+            quote! { rip_settings::field::FieldKind::TextInput }
         }
         "button" => {
             let action = attrs.action.as_deref().unwrap_or("");
             quote! {
-                multiplatform_settings_core::field::FieldKind::Button {
+                rip_settings::field::FieldKind::Button {
                     action: #action.to_string(),
                 }
             }
@@ -408,7 +408,7 @@ fn build_field_kind(attrs: &FieldAttrs) -> TokenStream {
         other => {
             let name = other.to_string();
             quote! {
-                multiplatform_settings_core::field::FieldKind::Custom {
+                rip_settings::field::FieldKind::Custom {
                     type_name: #name.to_string(),
                 }
             }
@@ -456,7 +456,7 @@ fn build_validation(validate: &ValidateAttrs) -> TokenStream {
     };
 
     quote! {
-        Some(multiplatform_settings_core::field::ValidationRules {
+        Some(rip_settings::field::ValidationRules {
             range: #range_tokens,
             length: #length_tokens,
             pattern: #pattern_tokens,
@@ -484,7 +484,7 @@ fn build_confirmation(attrs: &FieldAttrs) -> TokenStream {
     let is_dangerous = attrs.is_dangerous;
 
     quote! {
-        Some(multiplatform_settings_core::field::ConfirmationConfig {
+        Some(rip_settings::field::ConfirmationConfig {
             title: #title.to_string(),
             message: #message.to_string(),
             confirm_text: #confirm_text.to_string(),

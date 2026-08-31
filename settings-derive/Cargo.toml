@@ -1,17 +1,22 @@
 [package]
-name = "multiplatform-settings-derive"
+name = "rip-settings-derive"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Derive macros for multiplatform-settings-rs"
+homepage.workspace = true
+documentation.workspace = true
+readme.workspace = true
+description = "Derive macros for rip-settings - #[derive(Settings)] and #[derive(Category)]"
+keywords.workspace = true
+categories.workspace = true
 
 [lib]
 proc-macro = true
 
 [dependencies]
 syn = { version = "2.0", features = ["full", "extra-traits"] }
-quote = "1.0"
-proc-macro2 = "1.0"
-convert_case = "0.7"
+quote = "1.0.45"
+proc-macro2 = "1.0.106"
+convert_case = "0.7.1"

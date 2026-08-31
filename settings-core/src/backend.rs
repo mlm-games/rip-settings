@@ -10,7 +10,7 @@ pub trait SettingsBackend: Send + Sync {
     fn delete(&self) -> Result<(), SettingsError>;
 }
 
-/// JSON file backend — stores settings as a pretty-printed JSON file.
+/// JSON file backend - stores settings as a pretty-printed JSON file.
 pub struct JsonFileBackend {
     path: PathBuf,
 }
@@ -71,7 +71,7 @@ impl SettingsBackend for JsonFileBackend {
     }
 }
 
-/// In-memory backend — useful for testing.
+/// In-memory backend - useful for testing.
 pub struct MemoryBackend {
     data: Mutex<Vec<u8>>,
 }

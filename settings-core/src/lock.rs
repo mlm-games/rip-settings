@@ -22,8 +22,8 @@ pub struct DefaultPinHasher;
 
 impl PinHasher for DefaultPinHasher {
     fn hash(&self, pin: &str) -> String {
-        use argon2::password_hash::rand_core::OsRng;
         use argon2::password_hash::SaltString;
+        use argon2::password_hash::rand_core::OsRng;
         use argon2::{Argon2, PasswordHasher};
 
         let salt = SaltString::generate(&mut OsRng);
@@ -76,8 +76,8 @@ impl SettingsLockManager {
         if data.is_empty() {
             return Ok(());
         }
-        let state: LockState = serde_json::from_slice(data)
-            .map_err(|e| SettingsError::ParseError(e.to_string()))?;
+        let state: LockState =
+            serde_json::from_slice(data).map_err(|e| SettingsError::ParseError(e.to_string()))?;
         *self
             .state
             .write()
@@ -96,10 +96,7 @@ impl SettingsLockManager {
 
     #[must_use]
     pub fn is_lock_enabled(&self) -> bool {
-        self.state
-            .read()
-            .unwrap_or_else(|e| e.into_inner())
-            .enabled
+        self.state.read().unwrap_or_else(|e| e.into_inner()).enabled
     }
 
     #[must_use]

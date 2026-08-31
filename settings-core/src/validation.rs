@@ -23,7 +23,10 @@ pub fn validate_value(value: &serde_json::Value, rules: &ValidationRules) -> Val
         };
         if is_empty {
             return ValidationResult::Invalid(
-                rules.error_message.clone().unwrap_or_else(|| "This field is required".into()),
+                rules
+                    .error_message
+                    .clone()
+                    .unwrap_or_else(|| "This field is required".into()),
             );
         }
     }
@@ -32,9 +35,10 @@ pub fn validate_value(value: &serde_json::Value, rules: &ValidationRules) -> Val
         if let Some(num) = value.as_f64() {
             if num < min || num > max {
                 return ValidationResult::Invalid(
-                    rules.error_message.clone().unwrap_or_else(|| {
-                        format!("Value must be between {} and {}", min, max)
-                    }),
+                    rules
+                        .error_message
+                        .clone()
+                        .unwrap_or_else(|| format!("Value must be between {} and {}", min, max)),
                 );
             }
         }
@@ -44,11 +48,9 @@ pub fn validate_value(value: &serde_json::Value, rules: &ValidationRules) -> Val
         if let Some(s) = value.as_str() {
             let len = s.chars().count();
             if len < min_len || len > max_len {
-                return ValidationResult::Invalid(
-                    rules.error_message.clone().unwrap_or_else(|| {
-                        format!("Length must be between {} and {}", min_len, max_len)
-                    }),
-                );
+                return ValidationResult::Invalid(rules.error_message.clone().unwrap_or_else(
+                    || format!("Length must be between {} and {}", min_len, max_len),
+                ));
             }
         }
     }
@@ -59,9 +61,10 @@ pub fn validate_value(value: &serde_json::Value, rules: &ValidationRules) -> Val
                 Ok(re) => {
                     if !re.is_match(s) {
                         return ValidationResult::Invalid(
-                            rules.error_message.clone().unwrap_or_else(|| {
-                                "Value does not match required pattern".into()
-                            }),
+                            rules
+                                .error_message
+                                .clone()
+                                .unwrap_or_else(|| "Value does not match required pattern".into()),
                         );
                     }
                 }

@@ -39,7 +39,7 @@ impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
     }
 
     /// Update settings with a mutation function.
-    /// Validates all fields after mutation — if validation fails, the mutation is not persisted.
+    /// Validates all fields after mutation - if validation fails, the mutation is not persisted.
     pub fn update(&self, f: impl FnOnce(&mut T)) -> Result<(), SettingsError> {
         let mut guard = self
             .current
@@ -57,7 +57,8 @@ impl<T: SettingsSchema + PartialEq> SettingsRepository<T> {
         for field in candidate.fields() {
             if let Some(ref rules) = field.validation {
                 if let Ok(val) = candidate.get_field_value(field.name) {
-                    if let ValidationResult::Invalid(msg) = validation::validate_value(&val, rules) {
+                    if let ValidationResult::Invalid(msg) = validation::validate_value(&val, rules)
+                    {
                         return Err(SettingsError::ValidationFailed(msg));
                     }
                 }

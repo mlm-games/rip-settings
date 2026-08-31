@@ -1,5 +1,5 @@
-use multiplatform_settings_core::prelude::*;
-use multiplatform_settings_derive::{Category, Settings};
+use rip_settings::prelude::*;
+use rip_settings_derive::{Category, Settings};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -268,10 +268,7 @@ fn main() {
     println!("Before import: dark_mode={}", repo.get().dark_mode);
 
     let imported: AppSettings = backup_mgr
-        .import(
-            &exported,
-            &multiplatform_settings_core::backup::ImportOptions::default(),
-        )
+        .import(&exported, &rip_settings::backup::ImportOptions::default())
         .unwrap();
     repo.update(|s| *s = imported).unwrap();
     println!("After import: dark_mode={}", repo.get().dark_mode);
@@ -297,7 +294,9 @@ fn main() {
     )));
     let undo_mgr = UndoManager::new(repo.clone(), 20);
 
-    undo_mgr.set_field("font_size", serde_json::json!(30.0)).unwrap();
+    undo_mgr
+        .set_field("font_size", serde_json::json!(30.0))
+        .unwrap();
 
     println!("Undo/Redo:");
     println!("  font_size after change: {}", repo.get().font_size);

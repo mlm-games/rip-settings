@@ -1,5 +1,5 @@
 [workspace]
-members = ["settings-core", "settings-derive", "settings-example"]
+members = ["settings-core", "settings-derive", "settings-repose", "settings-example"]
 resolver = "2"
 
 [workspace.package]
@@ -7,17 +7,24 @@ version = "0.1.0"
 edition = "2024"
 authors = ["MLM Games"]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/mlm-games/multiplatform-settings-rs"
-description = "Settings handler with derive macros, validation, backup, migration, and pluggable backends"
+repository = "https://github.com/mlm-games/rip-settings"
+homepage = "https://github.com/mlm-games/rip-settings"
+documentation = "https://docs.rs/rip-settings"
+readme = "README.md"
+description = "Type-safe settings management for Rust with derive macros, validation, backup, and pluggable backends"
+keywords = ["settings", "config", "derive", "serde", "preferences"]
+categories = ["config", "rust-patterns"]
+exclude = [".github/images/"]
 
 [workspace.dependencies]
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-tokio = { version = "1.0", features = ["sync", "rt", "macros"] }
-thiserror = "2.0"
-chrono = { version = "0.4", features = ["serde"] }
-regex = "1.0"
-sha2 = "0.11"
-hex = "0.4"
-argon2 = "0.5"
-rand_core = { version = "0.6", features = ["getrandom"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+tokio = { version = "1.52.3", features = ["sync", "rt", "macros"] }
+thiserror = "2.0.18"
+chrono = { version = "0.4.45", features = ["serde"] }
+regex = "1.12.4"
+sha2 = "0.11.0"
+hex = "0.4.3"
+argon2 = "0.5.3"
+rand_core = { version = "0.6.4", features = ["getrandom"] }
+log = "0.4.32"

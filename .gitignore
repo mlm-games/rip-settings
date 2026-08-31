@@ -1,2 +1,37 @@
-/target
+# Rust build artifacts
+/target/
+**/*.rs.bk
 
+# Cargo lock is kept for binaries/examples but not required to ignore for libraries;
+# workspace lock is committed - uncomment next line if you prefer to ignore it:
+# Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env / secrets
+.env
+*.gpg
+
+# Coverage / profiling
+lcov.info
+*.profraw
+*.profdata
+tarpaulin-report.html
+
+# Docs build
+/doc/
+/docs/book/
+
+# Temporary
+*.tmp
+*.log

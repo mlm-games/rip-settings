@@ -22,13 +22,22 @@ impl KeyRename {
         old_key: impl Into<String>,
         new_key: impl Into<String>,
     ) -> Self {
-        Self { from_ver, to_ver, old_key: old_key.into(), new_key: new_key.into() }
+        Self {
+            from_ver,
+            to_ver,
+            old_key: old_key.into(),
+            new_key: new_key.into(),
+        }
     }
 }
 
 impl Migration for KeyRename {
-    fn from_version(&self) -> u32 { self.from_ver }
-    fn to_version(&self) -> u32 { self.to_ver }
+    fn from_version(&self) -> u32 {
+        self.from_ver
+    }
+    fn to_version(&self) -> u32 {
+        self.to_ver
+    }
     fn migrate(&self, value: &mut serde_json::Value) -> Result<(), SettingsError> {
         if let Some(obj) = value.as_object_mut() {
             if let Some(v) = obj.remove(&self.old_key) {
@@ -48,13 +57,21 @@ pub struct KeyDeletion {
 
 impl KeyDeletion {
     pub fn new(from_ver: u32, to_ver: u32, keys: Vec<String>) -> Self {
-        Self { from_ver, to_ver, keys }
+        Self {
+            from_ver,
+            to_ver,
+            keys,
+        }
     }
 }
 
 impl Migration for KeyDeletion {
-    fn from_version(&self) -> u32 { self.from_ver }
-    fn to_version(&self) -> u32 { self.to_ver }
+    fn from_version(&self) -> u32 {
+        self.from_ver
+    }
+    fn to_version(&self) -> u32 {
+        self.to_ver
+    }
     fn migrate(&self, value: &mut serde_json::Value) -> Result<(), SettingsError> {
         if let Some(obj) = value.as_object_mut() {
             for key in &self.keys {
@@ -78,21 +95,40 @@ impl CustomMigration {
         to_ver: u32,
         func: impl Fn(&mut serde_json::Value) -> Result<(), SettingsError> + Send + Sync + 'static,
     ) -> Self {
-        Self { from_ver, to_ver, func: Box::new(func) }
+        Self {
+            from_ver,
+            to_ver,
+            func: Box::new(func),
+        }
     }
 }
 
 impl Migration for CustomMigration {
-    fn from_version(&self) -> u32 { self.from_ver }
-    fn to_version(&self) -> u32 { self.to_ver }
-    fn migrate(&self, value: &mut serde_json::Value) -> Result<(), SettingsError> { (self.func)(value) }
+    fn from_version(&self) -> u32 {
+        self.from_ver
+    }
+    fn to_version(&self) -> u32 {
+        self.to_ver
+    }
+    fn migrate(&self, value: &mut serde_json::Value) -> Result<(), SettingsError> {
+        (self.func)(value)
+    }
 }
 
 #[derive(Clone, Debug)]
 pub enum MigrationResult {
     NoMigrationNeeded,
-    Success { from_version: u32, to_version: u32, migrations_applied: usize },
-    PartialSuccess { from_version: u32, to_version: u32, migrations_applied: usize, errors: Vec<(u32, String)> },
+    Success {
+        from_version: u32,
+        to_version: u32,
+        migrations_applied: usize,
+    },
+    PartialSuccess {
+        from_version: u32,
+        to_version: u32,
+        migrations_applied: usize,
+        errors: Vec<(u32, String)>,
+    },
 }
 
 /// Manages and applies migrations to raw settings data.
@@ -103,7 +139,10 @@ pub struct MigrationManager {
 
 impl MigrationManager {
     pub fn new(current_version: u32) -> Self {
-        Self { current_version, migrations: Vec::new() }
+        Self {
+            current_version,
+            migrations: Vec::new(),
+        }
     }
 
     pub fn add(mut self, migration: impl Migration + 'static) -> Self {
@@ -111,8 +150,10 @@ impl MigrationManager {
             assert!(
                 migration.from_version() >= last.to_version(),
                 "Migration chain broken: {}->{} doesn't follow {}->{}",
-                migration.from_version(), migration.to_version(),
-                last.from_version(), last.to_version()
+                migration.from_version(),
+                migration.to_version(),
+                last.from_version(),
+                last.to_version()
             );
         }
         self.migrations.push(Box::new(migration));
@@ -156,7 +197,10 @@ impl MigrationManager {
 
         if applicable.is_empty() {
             if let Some(obj) = data.as_object_mut() {
-                obj.insert("__schema_version".into(), serde_json::json!(self.current_version));
+                obj.insert(
+                    "__schema_version".into(),
+                    serde_json::json!(self.current_version),
+                );
             }
             return MigrationResult::NoMigrationNeeded;
         }
@@ -172,18 +216,32 @@ impl MigrationManager {
         }
 
         if let Some(obj) = data.as_object_mut() {
-            obj.insert("__schema_version".into(), serde_json::json!(self.current_version));
+            obj.insert(
+                "__schema_version".into(),
+                serde_json::json!(self.current_version),
+            );
         }
 
         if errors.is_empty() {
-            MigrationResult::Success { from_version: stored_version, to_version: self.current_version, migrations_applied: applied }
+            MigrationResult::Success {
+                from_version: stored_version,
+                to_version: self.current_version,
+                migrations_applied: applied,
+            }
         } else {
-            MigrationResult::PartialSuccess { from_version: stored_version, to_version: self.current_version, migrations_applied: applied, errors }
+            MigrationResult::PartialSuccess {
+                from_version: stored_version,
+                to_version: self.current_version,
+                migrations_applied: applied,
+                errors,
+            }
         }
     }
 
     pub fn stored_version(data: &serde_json::Value) -> u32 {
-        data.get("__schema_version").and_then(|v| v.as_u64()).unwrap_or(0) as u32
+        data.get("__schema_version")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0) as u32
     }
 }
 
@@ -203,8 +261,13 @@ mod tests {
 
     #[test]
     fn test_key_deletion() {
-        let mut data = serde_json::json!({"keep_me": true, "delete_me": "gone", "also_delete": 123});
-        let manager = MigrationManager::new(2).add_key_deletion(0, 1, vec!["delete_me".into(), "also_delete".into()]);
+        let mut data =
+            serde_json::json!({"keep_me": true, "delete_me": "gone", "also_delete": 123});
+        let manager = MigrationManager::new(2).add_key_deletion(
+            0,
+            1,
+            vec!["delete_me".into(), "also_delete".into()],
+        );
         manager.migrate(&mut data);
         assert!(data.get("delete_me").is_none());
         assert!(data.get("also_delete").is_none());

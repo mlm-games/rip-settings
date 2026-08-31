@@ -1,5 +1,5 @@
-use multiplatform_settings_core::prelude::*;
-use multiplatform_settings_derive::{Category, Settings};
+use rip_settings::prelude::*;
+use rip_settings_derive::{Category, Settings};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -260,9 +260,11 @@ fn test_get_set_field_value() {
 fn test_unknown_field() {
     let mut settings = TestSettings::default();
     assert!(settings.get_field_value("nonexistent").is_err());
-    assert!(settings
-        .set_field_value("nonexistent", serde_json::json!(1))
-        .is_err());
+    assert!(
+        settings
+            .set_field_value("nonexistent", serde_json::json!(1))
+            .is_err()
+    );
 }
 
 #[test]
@@ -382,10 +384,7 @@ fn test_backup_roundtrip() {
     let exported = backup_mgr.export(&repo.get()).unwrap();
 
     let imported: TestSettings = backup_mgr
-        .import(
-            &exported,
-            &multiplatform_settings_core::backup::ImportOptions::default(),
-        )
+        .import(&exported, &rip_settings::backup::ImportOptions::default())
         .unwrap();
 
     assert_eq!(imported, repo.get());
@@ -406,7 +405,7 @@ fn test_migration() {
     let result = mgr.migrate(&mut data);
     assert!(matches!(
         result,
-        multiplatform_settings_core::migration::MigrationResult::Success { .. }
+        rip_settings::migration::MigrationResult::Success { .. }
     ));
 
     assert_eq!(data["new_key"], "value");
@@ -505,7 +504,7 @@ fn test_field_kind_slider() {
     let volume_field = settings.field_by_name("volume").unwrap();
 
     match &volume_field.kind {
-        multiplatform_settings_core::field::FieldKind::Slider { min, max, step } => {
+        rip_settings::field::FieldKind::Slider { min, max, step } => {
             assert_eq!(*min, 0.0);
             assert_eq!(*max, 100.0);
             assert_eq!(*step, 1.0);

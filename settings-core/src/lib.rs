@@ -1,7 +1,7 @@
-//! # multiplatform-settings-core
+//! # rip-settings
 //!
-//! Runtime library for the multiplatform settings framework.
-//! Use with `multiplatform-settings-derive` for the `#[derive(Settings)]` macro.
+//! Runtime library for the rip-settings framework.
+//! Use with `rip-settings-derive` for the `#[derive(Settings)]` macro.
 
 pub mod backend;
 pub mod backup;
@@ -16,7 +16,7 @@ pub mod schema;
 pub mod undo;
 pub mod validation;
 
-/// Prelude — import everything you commonly need.
+/// Prelude - import everything you commonly need.
 pub mod prelude {
     pub use crate::backend::{JsonFileBackend, MemoryBackend, SettingsBackend};
     pub use crate::backup::SettingsBackupManager;

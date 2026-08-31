@@ -1,11 +1,16 @@
 [package]
-name = "multiplatform-settings-core"
+name = "rip-settings"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Core runtime for multiplatform-settings-rs"
+homepage.workspace = true
+documentation.workspace = true
+readme.workspace = true
+description = "Core runtime for rip-settings - repository, backends, validation, backup, migration, undo/redo, reset"
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
 serde = { workspace = true }

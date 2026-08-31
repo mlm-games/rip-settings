@@ -209,9 +209,15 @@ mod tests {
     }
 
     impl SettingsSchema for TestSettings {
-        fn schema_version(&self) -> u32 { 1 }
-        fn app_id(&self) -> &'static str { "test_app" }
-        fn fields(&self) -> Vec<crate::field::FieldMeta> { vec![] }
+        fn schema_version(&self) -> u32 {
+            1
+        }
+        fn app_id(&self) -> &'static str {
+            "test_app"
+        }
+        fn fields(&self) -> Vec<crate::field::FieldMeta> {
+            vec![]
+        }
         fn get_field_value(&self, name: &str) -> Result<serde_json::Value, SettingsError> {
             match name {
                 "dark_mode" => Ok(serde_json::json!(self.dark_mode)),
@@ -219,10 +225,20 @@ mod tests {
                 _ => Err(SettingsError::UnknownField(name.into())),
             }
         }
-        fn set_field_value(&mut self, name: &str, value: serde_json::Value) -> Result<(), SettingsError> {
+        fn set_field_value(
+            &mut self,
+            name: &str,
+            value: serde_json::Value,
+        ) -> Result<(), SettingsError> {
             match name {
-                "dark_mode" => { self.dark_mode = serde_json::from_value(value)?; Ok(()) }
-                "font_size" => { self.font_size = serde_json::from_value(value)?; Ok(()) }
+                "dark_mode" => {
+                    self.dark_mode = serde_json::from_value(value)?;
+                    Ok(())
+                }
+                "font_size" => {
+                    self.font_size = serde_json::from_value(value)?;
+                    Ok(())
+                }
                 _ => Err(SettingsError::UnknownField(name.into())),
             }
         }
@@ -231,9 +247,14 @@ mod tests {
     #[test]
     fn test_export_import_roundtrip() {
         let manager = SettingsBackupManager::new("test_app", 1);
-        let settings = TestSettings { dark_mode: true, font_size: 24.0 };
+        let settings = TestSettings {
+            dark_mode: true,
+            font_size: 24.0,
+        };
         let exported = manager.export(&settings).unwrap();
-        let imported: TestSettings = manager.import(&exported, &ImportOptions::default()).unwrap();
+        let imported: TestSettings = manager
+            .import(&exported, &ImportOptions::default())
+            .unwrap();
         assert_eq!(settings, imported);
     }
 
@@ -263,6 +284,9 @@ mod tests {
         let manager = SettingsBackupManager::new("test_app", 1);
         let result = manager.validate(&exported);
         assert!(!result.is_valid);
-        assert!(matches!(&result.issues[0], BackupIssue::AppIdMismatch { .. }));
+        assert!(matches!(
+            &result.issues[0],
+            BackupIssue::AppIdMismatch { .. }
+        ));
     }
 }

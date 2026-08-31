@@ -73,7 +73,10 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
             undo.pop_front();
         }
 
-        self.redo_stack.write().unwrap_or_else(|e| e.into_inner()).clear();
+        self.redo_stack
+            .write()
+            .unwrap_or_else(|e| e.into_inner())
+            .clear();
     }
 
     /// Undo the last change.
@@ -120,12 +123,20 @@ impl<T: SettingsSchema + PartialEq> UndoManager<T> {
 
     #[must_use]
     pub fn can_undo(&self) -> bool {
-        !self.undo_stack.read().unwrap_or_else(|e| e.into_inner()).is_empty()
+        !self
+            .undo_stack
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_empty()
     }
 
     #[must_use]
     pub fn can_redo(&self) -> bool {
-        !self.redo_stack.read().unwrap_or_else(|e| e.into_inner()).is_empty()
+        !self
+            .redo_stack
+            .read()
+            .unwrap_or_else(|e| e.into_inner())
+            .is_empty()
     }
 
     pub fn undo_description(&self) -> Option<String> {

@@ -1,9 +1,9 @@
-//! Proc macros for the multiplatform settings framework.
+//! Proc macros for the rip-settings framework.
 //!
 //! Provides `#[derive(Settings)]` and `#[derive(Category)]`.
 
 use proc_macro::TokenStream;
-use syn::{parse_macro_input, DeriveInput};
+use syn::{DeriveInput, parse_macro_input};
 
 mod category;
 mod settings;

@@ -20,7 +20,7 @@ pub enum SettingsError {
     #[error("Schema version {actual} is newer than supported {supported}")]
     VersionTooNew { actual: u32, supported: u32 },
 
-    #[error("Checksum mismatch — file may be corrupted")]
+    #[error("Checksum mismatch - file may be corrupted")]
     ChecksumMismatch,
 
     #[error("Parse error: {0}")]

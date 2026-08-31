@@ -4,8 +4,8 @@ version.workspace = true
 edition.workspace = true
 
 [dependencies]
-multiplatform-settings-core = { path = "../settings-core" }
-multiplatform-settings-derive = { path = "../settings-derive" }
+rip-settings = { path = "../settings-core" }
+rip-settings-derive = { path = "../settings-derive" }
 serde = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

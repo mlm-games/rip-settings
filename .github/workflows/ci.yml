@@ -1,0 +1,15 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "master"]
+  pull_request:
+    branches: ["main", "master"]
+
+jobs:
+  ci:
+    uses: mlm-games/ci/.github/workflows/rust-ci.yml@main
+    with:
+      run-clippy: true
+      run-fmt: true
+      run-test: true
